@@ -1,7 +1,7 @@
 # SFD2: Semantic-guided Feature Detection and Description
 
 <p align="center">
-  <img src="assets/overview.png" width="960">
+  <img src="assets/overview.png" width="640">
 </p>
 
 In this work, we propose to leverage global instances, which are robust to illumination and season changes for both
@@ -48,10 +48,9 @@ Please download datasets e.g. Aachen_v1.1, RobotCar-Seasons v2, and Extended-CMU
 
 you will get results like this:
 
-|          | Day  | Night       | 
-| -------- | ------- | -------- |
-| cvpr | 89.1 / 96.1 / 99.3 | 77.0 / 90.1 / 99.5  |
-| post-cvpr | 88.8 / 95.8 / 99.2 | 75.4 / 91.6 / 100 |
+| Day  | Night       | 
+| ------- | -------- |
+| 88.2 / 96.0 / 98.7 | 78.0 / 92.1 / 99.5 |
 
 * localization on RobotCar-Seasons
 
@@ -61,15 +60,23 @@ you will get results like this:
 
 you will get results like this:
 
-|        | Night  | Night-rain       | 
-| -------- | ----- | ------- |
-| cvpr | 24.9 / 62.3 / 86.1 | 47.5 / 73.4 / 90.0  |
-| post-cvpr | 28.1 / 66.9 / 91.8 | 46.1 / 73.6 / 92.5 |
+|day | night  | night-rain       | 
+| ----- | ------- | ------- | 
+| 56.9 / 81.6 / 97.4 | 27.6 / 66.2 / 90.2 | 43.0 / 71.1 / 90.0 |
 
+* localization on Extended CMU-Seasons
+```
+./test_ecmu
+```
+you will get results like this:
+
+| urban  | suburban       |  park
+| ----- | ------- | ------- |
+| 95.0 / 97.5 / 98.6 |  90.5 / 92.7 / 95.3 | 86.4 / 89.1 / 91.2|
 ## Training
 
 ```
-./test_ecmu
+./train.sh
 ```
 
 ## BibTeX Citation
@@ -89,5 +96,5 @@ If you use any ideas from the paper or code from this repo, please consider citi
 
 Part of the code is from previous excellent works
 including [SuperPoint](https://github.com/magicleap/SuperPointPretrainedNetwork), [R2D2](https://github.com/naver/r2d2)
-, [HLoc](https://github.com/cvg/Hierarchical-Localization), [ConvXt](https://github.com/facebookresearch/ConvNeXt). You can find more details from their released repositories
+, [HLoc](https://github.com/cvg/Hierarchical-Localization), [ConvXt](https://github.com/facebookresearch/ConvNeXt), [LBR](https://github.com/feixue94/lbr). You can find more details from their released repositories
 if you are interested in their works. 
