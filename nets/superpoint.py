@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Time    : 2019/11/26 下午2:23
-# @Author  : Fei Xue
-# @Email   : feixue@pku.edu.cn
-# @File    : superpoint.py
-# @Software: PyCharm
-
-
 import torch
 import torch.nn as nn
 
