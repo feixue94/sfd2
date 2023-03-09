@@ -1,0 +1,81 @@
+#!/bin/bash
+colmap=/home/mifs/fx221/Research/Software/bin/colmap
+
+root_dir=/scratches/flyer_2
+
+dataset=/scratches/flyer_2/fx221/localization/aachen_v1_1
+image_dir=$dataset/images/images_upright
+outputs=/scratches/flyer_2/fx221/localization/outputs/aachen_v1_1
+query_pair=pairs/aachen_v1.1/pairs-query-netvlad50.txt
+gt_pose_fn=/scratches/flyer_2/fx221/localization/outputs_hloc/aachen_v1_1/Aachen-v1.1_hloc_superpoint_n4096_r1600+superglue_netvlad50.txt
+save_root=$root_dir/fx221/exp/sgd2/aachen
+
+feat=ressegnetv2-20220810-wapv2-sd2mfsf-uspg-0001-n4096-r1600
+#feat=ressegnetv2-20220810-wapv2-sd2mfsf-uspg-0001-n3000-r1600
+#feat=ressegnetv2-20220810-wapv2-sd2mfsf-uspg-0001-n2000-r1600
+#feat=ressegnetv2-20220810-wapv2-sd2mfsf-uspg-0001-n1000-r1600
+
+
+matcher=NNM
+
+extract_feat_db=0
+match_db=0
+triangulation=0
+localize=1
+
+if [ "$extract_feat_db" -gt "0" ]; then
+  python3 -m extract_localization --image_dir $dataset/images/images_upright --export_dir $outputs/ --conf $feat
+fi
+
+if [ "$match_db" -gt "0" ]; then
+  python3 -m hloc.match_features --pairs pairs/aachen_v1.1/pairs-db-covis20.txt --export_dir $outputs/ --conf $matcher --features feats-$feat
+fi
+
+if [ "$triangulation" -gt "0" ]; then
+  python3 -m hloc.triangulation \
+    --sfm_dir $outputs/sfm_$feat-$matcher \
+    --reference_sfm_model $dataset/3D-models \
+    --image_dir $dataset/images/images_upright \
+    --pairs pairs/aachen_v1.1/pairs-db-covis20.txt \
+    --features $outputs/feats-$feat.h5 \
+    --matches $outputs/feats-$feat-$matcher-pairs-db-covis20.h5 \
+    --colmap_path $colmap
+fi
+
+ransac_thresh=15
+opt_thresh=15
+covisibility_frame=50
+#init_type="clu"
+init_type="sng"
+opt_type="clurefobs"
+inlier_thresh=10
+iters=5
+radius=30
+obs_thresh=3
+
+# with opt
+if [ "$localize" -gt "0" ]; then
+  python3 -m it_loc.localizer \
+    --dataset aachen_v1.1 \
+    --image_dir $image_dir \
+    --save_root $save_root \
+    --gt_pose_fn $gt_pose_fn \
+    --db_imglist_fn datasets/aachen/aachen_db_imglist.txt \
+    --retrieval $query_pair \
+    --reference_sfm $outputs/sfm_$feat-$matcher/model \
+    --queries $dataset/queries/day_night_time_queries_with_intrinsics.txt \
+    --features $outputs/feats-$feat.h5 \
+    --matcher_method $matcher \
+    --ransac_thresh $ransac_thresh \
+    --with_match \
+    --covisibility_frame $covisibility_frame \
+    --iters $iters \
+    --radius $radius \
+    --obs_thresh $obs_thresh \
+    --opt_thresh $opt_thresh \
+    --init_type $init_type \
+    --inlier_thresh $inlier_thresh \
+    --opt_type $opt_type
+fi
+# \
+#    --do_covisible_opt

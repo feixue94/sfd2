@@ -1,0 +1,80 @@
+#!/bin/bash
+colmap=/home/mifs/fx221/Research/Software/bin/colmap
+
+root_dir=/scratches/flyer_2
+
+dataset=$root_dir/fx221/localization/RobotCar-Seasons
+image_dir=$root_dir/fx221/localization/RobotCar-Seasons/images
+outputs=$root_dir/fx221/localization/outputs/robotcar
+db_pair=$root_dir/fx221/localization/outputs/robotcar/pairs-db-covis20.txt
+query_fn=$dataset/queries_with_intrinsics_rear.txt
+query_pair=pairs/robotcar-seasons/pairs-query-netvlad20-percam-perloc-rear.txt
+gt_pose_fn=/data/cornucopia/fx221/localization/RobotCar-Seasons/3D-models/query_poses_v2.txt
+save_root=$root_dir/fx221/exp/sgd2/robotcar
+
+feat=ressegnetv2-20220810-wapv2-sd2mfsf-uspg-0001-n4096-r1600
+
+
+matcher=NNM
+
+extract_feat_db=0
+match_db=0
+triangulation=0
+localize=1
+
+
+if [ "$extract_feat_db" -gt "0" ]; then
+  python3 -m extract_localization --image_list pairs/robotcar-seasons/robotcar_db_query_imglist.txt --image_dir $dataset/images --export_dir $outputs/ --conf $feat
+fi
+
+
+if [ "$match_db" -gt "0" ]; then
+  python3 -m hloc.match_features --pairs $outputs/pairs-db-covis20.txt --export_dir $outputs/ --conf $matcher --features feats-$feat
+fi
+
+if [ "$triangulation" -gt "0" ]; then
+  python3 -m hloc.triangulation \
+    --sfm_dir $outputs/sfm_$feat-$matcher \
+    --reference_sfm_model $dataset/sfm-sift \
+    --image_dir $dataset/images/ \
+    --pairs $outputs/pairs-db-covis20.txt \
+    --features $outputs/feats-$feat.h5 \
+    --matches $outputs/feats-$feat-$matcher-pairs-db-covis20.h5 \
+    --colmap_path $colmap
+fi
+
+ransac_thresh=12
+opt_thresh=12
+covisibility_frame=20
+init_type="sng"
+opt_type="clurefpos"
+inlier_thresh=100
+iters=5
+radius=20
+obs_thresh=3
+
+# with opt
+if [ "$localize" -gt "0" ]; then
+  python3 -m it_loc.localizer \
+    --dataset robotcar \
+    --image_dir $image_dir \
+    --save_root $save_root \
+    --gt_pose_fn $gt_pose_fn \
+    --db_imglist_fn datasets/aachen/aachen_db_imglist.txt \
+    --retrieval $query_pair \
+    --reference_sfm $outputs/sfm_$feat-$matcher/model \
+    --queries $dataset/queries_with_intrinsics_rear.txt \
+    --features $outputs/feats-$feat.h5 \
+    --matcher_method $matcher \
+    --ransac_thresh $ransac_thresh \
+    --with_match \
+    --covisibility_frame $covisibility_frame \
+    --iters $iters \
+    --radius $radius \
+    --inlier_thresh $inlier_thresh \
+    --obs_thresh $obs_thresh \
+    --opt_thresh $opt_thresh \
+    --init_type $init_type \
+    --opt_type $opt_type \
+    --do_covisible_opt
+fi
