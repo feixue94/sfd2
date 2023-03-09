@@ -15,8 +15,8 @@ import h5py
 import numpy as np
 from pathlib import Path
 
-from hloc.utils.read_write_model import read_model
-from hloc.utils.parsers import parse_image_lists_with_intrinsics
+from it_loc.read_write_model import read_model
+from it_loc.parsers import parse_image_lists_with_intrinsics
 from it_loc.loc_tools import read_retrieval_results, compute_pose_error
 from it_loc.localize_cv2 import pose_from_cluster_with_matcher, do_covisibility_clustering
 from it_loc.matcher import Matcher, confs
@@ -53,13 +53,7 @@ def run(args):
     db_name_to_id = {image.name: i for i, image in db_images.items()}
     feature_file = h5py.File(args.features, 'r')
 
-    # tag = 'tst1'
-    # tag = 'all'
-    # tag = 'day'
-    # tag = 'nht'
-    # tag = 'nnr'
-    # tag = 'day'
-    tag = 'vis'
+    tag = 'all'
     if args.do_covisible_opt:
         tag = tag + "_o" + str(int(args.obs_thresh)) + 'op' + str(int(args.covisibility_frame))
         tag = tag + args.opt_type + "th" + str(int(args.opt_thresh)) + "r" + str(args.radius)
@@ -90,50 +84,7 @@ def run(args):
     success = [0, 0, 0]
     n_gt_total = 0
 
-    query_list = [
-        # 'query/night/nexus5x/IMG_20161227_172626.jpg',
-        # 'query/night/nexus5x/IMG_20161227_192112.jpg',
-        # 'query/night/nexus5x_additional_night/IMG_20170702_003213.jpg',
-        # 'query/night/nexus5x_additional_night/IMG_20170702_005005.jpg',
-
-        'query/night/nexus5x/IMG_20161227_172626.jpg',
-        'query/night/nexus5x/IMG_20161227_173116.jpg',
-        'query/night/nexus5x/IMG_20161227_173132.jpg',
-        'query/night/nexus5x/IMG_20161227_173202.jpg',
-        'query/night/nexus5x/IMG_20161227_191109.jpg',
-        'query/night/nexus5x_additional_night/IMG_20170702_003136.jpg',
-        'query/night/nexus5x_additional_night/IMG_20170702_003420.jpg',
-        'query/night/nexus5x_additional_night/IMG_20170702_003909.jpg',
-        'query/night/nexus5x_additional_night/IMG_20170702_005046.jpg',
-        'query/night/nexus5x_additional_night/IMG_20170702_005153.jpg',
-        'query/night/nexus5x_additional_night/IMG_20170702_005747.jpg'
-    ]
-    n = 0
     for qname, qinfo in tqdm(queries):
-        # if qname.find('IMG_20140521_135553.jpg') < 0:
-        #     continue
-        # n = n + 1
-        # if n <= 383:
-        #     continue
-        # if qname.find('IMG_20140520_183007.jpg') < 0:
-        # if qname.find('2011-12-17_14-53-36_335.jpg') < 0:
-        # if qname.find('IMG_20140520_182639.jpg') < 0:
-        #     continue
-        # if qname not in query_list:
-        #     continue
-        #
-        # if qname.find('day') >= 0:
-        #     continue
-        # if qname.find('night') >= 0:
-        #     continue
-
-        # cat = qname.split('/')[0]
-        # if cat not in ['night', 'night-rain']:
-        #     continue
-        # if cat in ['night', 'night-rain']:
-        #     continue
-
-        # qname.find('')
         time_start = time.time()
 
         if qname in retrievals.keys():
@@ -273,9 +224,9 @@ def run_ecmu(args):
     local_feat_name = args.features.as_posix().split("/")[-1].split(".")[0]  # name of local features
 
     save_fn = 'slice{:d}_{:s}_{:s}_{:s}_{:.0f}_{:d}'.format(args.slice,
-                                                             local_feat_name, matcher_name, args.init_type,
-                                                             args.ransac_thresh,
-                                                             args.inlier_thresh)
+                                                            local_feat_name, matcher_name, args.init_type,
+                                                            args.ransac_thresh,
+                                                            args.inlier_thresh)
     save_fn = osp.join(save_root, save_fn)
 
     queries = parse_image_lists_with_intrinsics(args.queries)
