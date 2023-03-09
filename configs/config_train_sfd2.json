@@ -1,9 +1,10 @@
 {
   "name": "sfd2",
   "gpu": [
-    0,1
+    0,
+    1
   ],
-  "root": "/scratches/flyer_2/fx221/exp/r2d2",
+  "root": "/scratches/flyer_2/fx221/exp/sfd2",
   "bs": 4,
   "with_dist": 0,
   "dim": 128,
@@ -43,15 +44,8 @@
   "iterations_per_epoch": 4000,
   "epochs": 40,
   "do_eval": 1,
-  "decay_rate": 0.99996,
-  "decay_iter": 80000,
-  "eval_root": "/scratches/flyer_3/fx221/dataset/test_images/trans",
-  "eval_ref_fn": "img.jpg",
-  "eval_query_list": "evaluate_image_list.txt",
-  "eval_config": "/home/mifs/fx221/Research/Code/swd2/configs/config_evaluation.json",
   "tag": "",
   "upsampling": false,
   "use_stability": false,
-  "resume": "None",
-  "resume_": "2022_08_08_16_30_57_ressegnetv2_wapv2_B4_D128_R512_ce_sd_usp/epoch_16.pth"
+  "resume": "None"
 }
