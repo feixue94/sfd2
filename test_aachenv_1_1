@@ -18,9 +18,9 @@ feat=ressegnetv2-20220810-wapv2-sd2mfsf-uspg-0001-n4096-r1600
 
 matcher=NNM
 
-extract_feat_db=0
-match_db=0
-triangulation=0
+extract_feat_db=1
+match_db=1
+triangulation=1
 localize=1
 
 if [ "$extract_feat_db" -gt "0" ]; then
@@ -75,7 +75,6 @@ if [ "$localize" -gt "0" ]; then
     --opt_thresh $opt_thresh \
     --init_type $init_type \
     --inlier_thresh $inlier_thresh \
-    --opt_type $opt_type
+    --opt_type $opt_type \
+    --do_covisible_opt
 fi
-# \
-#    --do_covisible_opt
