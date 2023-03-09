@@ -1,0 +1,29 @@
+{
+  "input_pairs": "assets/yfcc_test_pairs_with_gt.txt",
+  "input_dir_": "/scratches/flyer_3/fx221/dataset/YFCC/data/yfcc100m",
+  "input_dir": "/scratch/fx221/dataset/YFCC/data/yfcc100m",
+  "output_dir": "/scratches/flyer_3/fx221/exp/swd2",
+  "superglue": "outdoor",
+  "shuffle": 0,
+  "opencv_display": 0,
+  "viz": 1,
+  "show_keypoints": 0,
+  "fast_viz": 1,
+  "max_length": 100,
+  "resize1": [
+    1600
+  ],
+  "resize": [
+    1024
+  ],
+  "resize_float": 1,
+  "max_keypoints": 1024,
+  "keypoint_threshold": 0.002,
+  "conf_th": 0.0025,
+  "conf_th_": 0.5,
+  "nms_radius": 3,
+  "sinkhorn_iterations": 20,
+  "match_threshold": 0.2,
+  "viz_extension": "png",
+  "eval": 1
+}
