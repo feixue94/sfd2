@@ -3,7 +3,6 @@ __pycache__
 log
 eval/*.pdf
 weights/convxts-base_ade20k.pth
-weights
 megadepth_matches_512_3
 results/
 imgs/
