@@ -9,7 +9,7 @@ coarse and fine localization. For coarse localization, instead of performing glo
 for reference images from recognized global instances progressively. The recognized instances are further utilized for
 instance-wise feature detection and matching to enhance the localization accuracy.
 
-* Full paper PDF: [SFD2: Semantic-guided Feature Detection and Description](https://arxiv.org/abs/1911.11763).
+* Full paper PDF: [SFD2: Semantic-guided Feature Detection and Description](https://arxiv.org/abs/2304.14845).
 
 * Authors: *Fei Xue, Ignas Budvytis, Roberto Cipolla*
 
@@ -33,7 +33,7 @@ instance-wise feature detection and matching to enhance the localization accurac
 
 ## Pretrained weights
 
-Pretrained weights for SFD2 can be downloaded [here](https://drive.google.com/file/d/1N4j7PkZoy2CkWhS7u6dFzMIoai3ShG9p/view?usp=sharing). If you want to retrain the model, please also download the weights of [ConvXt](https://github.com/facebookresearch/ConvNeXt) and [SuperPoint](https://github.com/magicleap/SuperPointPretrainedNetwork) from [here](https://drive.google.com/file/d/1N4j7PkZoy2CkWhS7u6dFzMIoai3ShG9p/view?usp=sharing) and put them nto the `weights` directory.
+Pretrained weight of SFD2 is in the `weights` directory. If you want to retrain the model, please also download the weights of [ConvXt](https://github.com/facebookresearch/ConvNeXt) and [SuperPoint](https://github.com/magicleap/SuperPointPretrainedNetwork) from [here](https://drive.google.com/file/d/1N4j7PkZoy2CkWhS7u6dFzMIoai3ShG9p/view?usp=sharing) and put them nto the `weights` directory.
 
 
 ## Localization results
