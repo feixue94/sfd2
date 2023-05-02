@@ -102,7 +102,13 @@ class SuperPointNet(torch.nn.Module):
         desc = self.convDb(cDa)
         dn = torch.norm(desc, p=2, dim=1)  # Compute the norm.
         desc = desc.div(torch.unsqueeze(dn, 1))  # Divide by norm to normalize.
-        return score, desc, semi_norm
+        # return score, desc, semi_norm
+        return {
+            'scores': score,
+            'semi_norm': semi_norm,
+            'semi': semi,
+            'descs': desc,
+        }
 
 
 if __name__ == '__main__':

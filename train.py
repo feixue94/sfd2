@@ -5,11 +5,14 @@
 @Author fx221@cam.ac.uk
 @Date   09/03/2023 16:11
 =================================================='''
-
+import torch
+import torch.nn as nn
 import os.path as osp
 from tools.dataloader import *
-from nets.losses import *
-from nets.spd import *
+from nets.losses import SegLoss
+from nets.sfd2 import ResSegNetV2
+from nets.sampler import NghSampler2DS
+from nets.reliability_loss import ReliabilityLoss
 from trainer import Trainer
 import warnings
 import torch.multiprocessing as mp
@@ -76,23 +79,23 @@ def train_DDP(rank, world_size, model, args):
                             scaling_step=args.scaling_step)  # default subq=-4, subd_neg=-4
     reliability_loss = ReliabilityLoss(sampler=sampler, base=0.5, nq=20).cuda()
 
-    loss = SwinLoss(desc_loss_fn=reliability_loss,
-                    weights={
-                        "det_loss": args.wdet,
-                        "desc_loss": args.wdesc,
-                        "seg_det_loss": args.wsdet,
-                        "seg_desc_loss": args.wsdesc,
-                        "seg_feat_loss": args.wsfeat,
-                    },
-                    use_pred_score_desc=args.use_pred_score_desc > 0,
-                    det_loss=args.det_loss,
-                    seg_desc_loss_fn=args.seg_desc_loss_fn,
-                    upsample_desc=upsample_desc,
-                    seg_desc=args.seg_desc > 0,
-                    seg_feat=args.seg_feat > 0,
-                    seg_det=args.seg_det > 0,
-                    seg_cls=args.seg_cls > 0,
-                    )
+    loss = SegLoss(desc_loss_fn=reliability_loss,
+                   weights={
+                       "det_loss": args.wdet,
+                       "desc_loss": args.wdesc,
+                       "seg_det_loss": args.wsdet,
+                       "seg_desc_loss": args.wsdesc,
+                       "seg_feat_loss": args.wsfeat,
+                   },
+                   use_pred_score_desc=args.use_pred_score_desc > 0,
+                   det_loss=args.det_loss,
+                   seg_desc_loss_fn=args.seg_desc_loss_fn,
+                   upsample_desc=upsample_desc,
+                   seg_desc=args.seg_desc > 0,
+                   seg_feat=args.seg_feat > 0,
+                   seg_det=args.seg_det > 0,
+                   seg_cls=args.seg_cls > 0,
+                   )
 
     db = [data_sources[key] for key in args.train_data]
     train_set = eval(args.data_loader.replace('`data`', ','.join(db)).replace('`R`', str(args.R)).replace('\n', ''))
@@ -128,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument("--train-data", type=str, default=list('WASF'), nargs='+',
                         choices=set(data_sources.keys()))
     parser.add_argument("--net", type=str, help='network architecture')
-    parser.add_argument("--root", type=str, default='/home/mifs/fx221/fx221/exp/swd2')
+    parser.add_argument("--root", type=str, default='/home/mifs/fx221/fx221/exp/sfd2')
     parser.add_argument("--tag", type=str, default='')
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--iterations_per_epoch", type=int, default=-1, help='number of iteraions per epoch')
@@ -191,23 +194,23 @@ if __name__ == '__main__':
                                 scaling_step=args.scaling_step)  # default subq=-4, subd_neg=-4
         reliability_loss = ReliabilityLoss(sampler=sampler, base=0.5, nq=20).cuda()
 
-        loss = SwinLoss(desc_loss_fn=reliability_loss,
-                        weights={
-                            "det_loss": args.wdet,
-                            "desc_loss": args.wdesc,
-                            "seg_det_loss": args.wsdet,
-                            "seg_desc_loss": args.wsdesc,
-                            "seg_feat_loss": args.wsfeat,
-                        },
-                        use_pred_score_desc=args.use_pred_score_desc > 0,
-                        det_loss=args.det_loss,
-                        seg_desc_loss_fn=args.seg_desc_loss_fn,
-                        upsample_desc=upsample_desc,
-                        seg_desc=args.seg_desc > 0,
-                        seg_feat=args.seg_feat > 0,
-                        seg_det=args.seg_det > 0,
-                        seg_cls=args.seg_cls > 0,
-                        )
+        loss = SegLoss(desc_loss_fn=reliability_loss,
+                       weights={
+                           "det_loss": args.wdet,
+                           "desc_loss": args.wdesc,
+                           "seg_det_loss": args.wsdet,
+                           "seg_desc_loss": args.wsdesc,
+                           "seg_feat_loss": args.wsfeat,
+                       },
+                       use_pred_score_desc=args.use_pred_score_desc > 0,
+                       det_loss=args.det_loss,
+                       seg_desc_loss_fn=args.seg_desc_loss_fn,
+                       upsample_desc=upsample_desc,
+                       seg_desc=args.seg_desc > 0,
+                       seg_feat=args.seg_feat > 0,
+                       seg_det=args.seg_det > 0,
+                       seg_cls=args.seg_cls > 0,
+                       )
 
         if len(args.gpu) > 1:
             print('gpu: ', args.gpu)

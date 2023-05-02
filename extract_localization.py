@@ -19,7 +19,7 @@ import pprint
 from pathlib import Path
 import argparse
 
-from nets.spd import ResSegNet, ResSegNetV2
+from nets.sfd2 import ResSegNet, ResSegNetV2
 from nets.extractor import extract_resnet_return
 
 confs = {

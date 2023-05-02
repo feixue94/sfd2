@@ -26,7 +26,6 @@ class Trainer:
         self.model = net
         self.loader = loader
         self.loss_func = loss
-        # self.optimizer = optimizer
         self.optimizer = optim.Adam([p for p in net.parameters() if p.requires_grad],
                                     lr=args.lr, weight_decay=args.weight_decay)
         self.do_val = args.do_eval > 0
@@ -256,14 +255,6 @@ class Trainer:
         self.log_file.flush()
         return np.mean(epoch_losses)
 
-    def torch2Gray(self, img):
-        with torch.no_grad():
-            # gray_img = img.transpose(0, 3, 1, 2)
-            gray_img = 0.299 * img[:, :, :, 0] + 0.587 * img[:, :, :, 1] + 0.114 * img[:, :, :, 2]
-            gray_img -= torch.mean(torch.mean(gray_img, dim=2, keepdim=True), dim=1, keepdim=True)
-            gray_img = gray_img.unsqueeze(1)
-            return gray_img
-
     def forward_backward(self, inputs):
         image1 = inputs.pop("img1")  # torch.mean(inputs.pop("img1"), dim=1, keepdim=True)
         image2 = inputs.pop("img2")  # torch.mean(inputs.pop("img2"), dim=1, keepdim=True)
@@ -328,7 +319,12 @@ class Trainer:
                 del raw_image2
 
         with torch.no_grad():
-            spp_score, spp_desc, spp_semi = self.spp(torch.cat([gray_image1, gray_image2], dim=0))
+            # spp_score, spp_desc, spp_semi = self.spp(torch.cat([gray_image1, gray_image2], dim=0))
+            spp_out = self.spp(torch.cat([gray_image1, gray_image2], dim=0))
+            spp_score = spp_out['scores']
+            spp_desc = spp_out['descs']
+            spp_semi = spp_out['semi']
+            spp_semi_norm = spp_out['semi_norm']
             del gray_image1
             del gray_image2
             del spp_desc
@@ -342,6 +338,7 @@ class Trainer:
 
             allvars["gt_score"] = spp_score  # torch.cat([spp_score1, spp_score2], dim=0)
             allvars["gt_semi"] = spp_semi  # torch.cat([spp_score1, spp_score2], dim=0)
+            allvars["gt_semi_norm"] = spp_semi_norm  # torch.cat([spp_score1, spp_score2], dim=0)
             # allvars["gt_desc"] = spp_desc  # torch.cat([spp_desc1, spp_desc2], dim=0)
             allvars["weight"] = weight  # torch.cat([weight1, weight2], dim=0)
 
