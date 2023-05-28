@@ -1,7 +1,7 @@
 # SFD2: Semantic-guided Feature Detection and Description
 
 <p align="center">
-  <img src="assets/overview.png" width="640">
+  <img src="assets/SFD2.gif" width="640">
 </p>
 
 In this work, we propose to leverage global instances, which are robust to illumination and season changes for both
