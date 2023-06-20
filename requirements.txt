@@ -1,0 +1,43 @@
+coloredlogs==15.0.1
+dual-quaternions==0.3.1
+easydict==1.9
+einops==0.4.1
+faiss-cpu==1.6.1
+faiss-gpu==1.6.1
+h5py==3.6.0
+imageio==2.9.0
+imageio-ffmpeg==0.4.7
+imagesize==1.3.0
+kmeans-pytorch==0.3
+kornia==0.6.7
+mmcls==0.23.1
+mmcv-full==1.5.0
+-e git+https://github.com/open-mmlab/mmsegmentation.git@85569442b659fa59a51a88449689b2aa1603e4ba#egg=mmsegmentation
+opencv-contrib-python==3.4.2.17
+opencv-python==4.5.5.64
+pathlib==1.0.1
+Pillow==8.2.0
+py360convert==0.1.0
+pycolmap @ file:///home/mifs/fx221/Research/Code/thirdparty/pycolmap
+pycparser==2.21
+pydegensac==0.1.2
+pydensecrf @ git+https://github.com/lucasb-eyer/pydensecrf.git@0d53acbcf5123d4c88040fe68fbb9805fc5b2fb9
+pyflann-py3==0.1.0
+pykeops==2.1
+-e git+https://github.com/danini/magsac.git@3c6409ba1623930e35a8da5615c1abc553aa03ee#egg=pymagsac
+pyquaternion==0.9.9
+pytorch3d==0.3.0
+PyYAML==6.0
+scikit-image==0.19.1
+scikit-learn==1.0.1
+scipy==1.5.4
+segmentation-models-pytorch==0.1.3
+sklearn==0.0
+timm==0.4.12
+torch==1.10.1+cu111
+torch-dimcheck @ file:///scratches/flyer_2/fx221/Research/Code/thirdparty/disk/submodules/torch-dimcheck
+torch-geometric==2.0.4
+torch-localize @ file:///home/mifs/fx221/Research/Code/thirdparty/disk/submodules/torch-localize
+torchvision==0.11.2+cu111
+tqdm==4.64.1
+transforms3d==0.3.1

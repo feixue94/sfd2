@@ -33,7 +33,7 @@ instance-wise feature detection and matching to enhance the localization accurac
 
 ## Pretrained weights
 
-Pretrained weight of SFD2 is in the `weights` directory. If you want to retrain the model, please also download the weights of [ConvXt](https://github.com/facebookresearch/ConvNeXt) and [SuperPoint](https://github.com/magicleap/SuperPointPretrainedNetwork) from [here]() and put them nto the `weights` directory.
+Pretrained weight of SFD2 is in the `weights` directory. If you want to retrain the model, please also download the weights of [ConvXt](https://github.com/facebookresearch/ConvNeXt) and [SuperPoint](https://github.com/magicleap/SuperPointPretrainedNetwork) from [here](https://drive.google.com/drive/folders/1bM5lmMFMbsnDe_AdQ6SSs-t2OMIuys_j?usp=sharing) and put them nto the `weights` directory.
 
 
 ## Localization results

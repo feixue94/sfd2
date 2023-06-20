@@ -7,7 +7,7 @@ dataset=/scratches/flyer_2/fx221/localization/aachen_v1_1
 image_dir=$dataset/images/images_upright
 outputs=/scratches/flyer_2/fx221/localization/outputs/aachen_v1_1
 query_pair=pairs/aachen_v1.1/pairs-query-netvlad50.txt
-gt_pose_fn=/scratches/flyer_2/fx221/localization/outputs_hloc/aachen_v1_1/Aachen-v1.1_hloc_superpoint_n4096_r1600+superglue_netvlad50.txt
+gt_pose_fn=assets/Aachen-v1.1_hloc_superpoint_n4096_r1600+superglue_netvlad50.txt
 save_root=$root_dir/fx221/exp/sgd2/aachen
 
 feat=ressegnetv2-20220810-wapv2-sd2mfsf-uspg-0001-n4096-r1600

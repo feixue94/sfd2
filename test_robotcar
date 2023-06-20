@@ -9,7 +9,7 @@ outputs=$root_dir/fx221/localization/outputs/robotcar
 db_pair=$root_dir/fx221/localization/outputs/robotcar/pairs-db-covis20.txt
 query_fn=$dataset/queries_with_intrinsics_rear.txt
 query_pair=pairs/robotcar-seasons/pairs-query-netvlad20-percam-perloc-rear.txt
-gt_pose_fn=/data/cornucopia/fx221/localization/RobotCar-Seasons/3D-models/query_poses_v2.txt
+gt_pose_fn=assets/RobotCar_hloc_superpoint+superglue_netvlad20.txt
 save_root=$root_dir/fx221/exp/sgd2/robotcar
 
 feat=ressegnetv2-20220810-wapv2-sd2mfsf-uspg-0001-n4096-r1600
