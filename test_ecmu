@@ -11,7 +11,7 @@ image_dir=$dataset/slice$slice
 outputs=/scratches/flyer_3/fx221/localization/outputs/ecmus/slice$slice
 query_pair=/scratches/flyer_3/fx221/localization/outputs/ecmus/slice$slice/pairs-query-netvlad10.txt
 db_pair=/scratches/flyer_3/fx221/localization/outputs/ecmus/slice$slice/pairs-db-covis20.txt
-gt_pose_fn=/scratches/flyer_2/fx221/localization/outputs_hloc/aachen_v1_1/Aachen-v1.1_hloc_superpoint_n4096_r1600+superglue_netvlad50.txt
+gt_pose_fn=/scratches/flyer_2/fx221/localization/outputs_hloc/aachen_v1_1/Aachen-v1.1_hloc_superpoint_n4096_r1600+superglue_netvlad50.txt # not available
 save_root=/scratches/flyer_3/fx221/exp/sgd2/ecmus
 
 feat=ressegnetv2-20220810-sfd2-0001-n4096-r1024
