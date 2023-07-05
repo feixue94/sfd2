@@ -13,7 +13,7 @@ instance-wise feature detection and matching to enhance the localization accurac
 
 * Authors: *Fei Xue, Ignas Budvytis, Roberto Cipolla*
 
-* Website: [SFD2](https://github.com/feixue94/feixue94.github.io/lbr) for videos and slides.
+* Website: [SFD2](https://feixue94.github.io/) for videos and slides.
 
 ## Dependencies
 
