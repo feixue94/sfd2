@@ -118,8 +118,12 @@ def geometric_verification(colmap_path, database_path, pairs_path):
         '--database_path', str(database_path),
         '--match_list_path', str(pairs_path),
         '--match_type', 'pairs',
-        '--SiftMatching.max_num_trials', str(20000),
-        '--SiftMatching.min_inlier_ratio', str(0.1)]
+        #'--SiftMatching.max_num_trials', str(20000),
+        #'--SiftMatching.min_inlier_ratio', str(0.1),
+        # '--TwoViewGeometry.max_num_trials', str(20000),
+        # '--TwoViewGeometry.min_inlier_ratio', str(0.1)
+
+    ]
     ret = subprocess.call(cmd)
     if ret != 0:
         logging.warning('Problem with matches_importer, exiting.')
@@ -139,7 +143,9 @@ def run_triangulation(colmap_path, model_path, database_path, image_dir,
         '--output_path', str(model_path),
         '--Mapper.ba_refine_focal_length', '0',
         '--Mapper.ba_refine_principal_point', '0',
-        '--Mapper.ba_refine_extra_params', '0']
+        '--Mapper.ba_refine_extra_params', '0',
+        # '--Mapper.fix_existing_images', '1'
+    ]
     logging.info(' '.join(cmd))
     ret = subprocess.call(cmd)
     if ret != 0:
@@ -177,7 +183,6 @@ def main(sfm_dir, reference_sfm_model, image_dir, pairs, features, matches,
 
     sfm_dir.mkdir(parents=True, exist_ok=True)
     database = sfm_dir / 'database.db'
-    # model = sfm_dir / 'model'
     model = sfm_dir
     model.mkdir(exist_ok=True)
     empty_model = sfm_dir / 'empty'

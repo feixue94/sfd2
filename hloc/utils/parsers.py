@@ -63,5 +63,9 @@ def parse_retrieval(path):
     return dict(retrieval)
 
 
+def names_to_pair_new(name0, name1, separator="/"):
+    return separator.join((name0.replace("/", "-"), name1.replace("/", "-")))
+
+
 def names_to_pair(name0, name1):
     return '_'.join((name0.replace('/', '-'), name1.replace('/', '-')))

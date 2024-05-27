@@ -1,22 +1,13 @@
-import argparse
-import logging
 import numpy as np
-from pathlib import Path
-from collections import defaultdict
-import h5py
-from tqdm import tqdm
-import pickle
 import pycolmap
 import cv2
 from copy import deepcopy
 import os.path as osp
-from it_loc.common import resize_img, sort_dict_by_value, reproject, reproject_fromR, calc_depth, ColmapQ2R, \
+from it_loc.common import resize_img, sort_dict_by_value, reproject, \
     compute_pose_error, plot_matches, plot_reprojpoint2D
 
 
 def plot_matches_vis(img1, img2, pts1, pts2, inliers, horizon=True, plot_outlier=False, plot_match=True):
-    # print(type(pts1), type(inliers), inliers.shape)
-    # print(inliers)
     if type(inliers) == list:
         inliers = np.array(inliers, dtype=bool).reshape(-1, 1)
     rows1 = img1.shape[0]
@@ -261,10 +252,6 @@ def pose_refinement_covisibility(qname, cfg, feature_file, db_frame_id, db_image
     else:
         print('ERROR: Please specify method for getting reference images {:s}'.format(opt_type))
         exit(0)
-    # db_ids = get_covisibility_frames(frame_id=db_frame_id, all_images=db_images, points3D=points3D,
-    #                                  covisibility_frame=covisibility_frame, ref_3Dpoints=ref_3Dpoints,
-    #                                  obs_th=obs_th)
-
     kpq = feature_file[qname]['keypoints'].__array__()
     desc_q = feature_file[qname]['descriptors'].__array__()
     score_q = feature_file[qname]['scores'].__array__()
@@ -379,15 +366,25 @@ def pose_refinement_covisibility(qname, cfg, feature_file, db_frame_id, db_image
     mp3d = np.array(mp3d, float).reshape(-1, 3)
     mkpq = np.array(mkpq, float).reshape(-1, 2)
 
-    mkpq = mkpq + 0.5
-
     print_text = 'Get {:d} covisible frames with {:d} matches from cluster optimization'.format(len(db_ids),
                                                                                                 mp3d.shape[0])
     print(print_text)
     if log_info is not None:
         log_info += (print_text + '\n')
 
-    ret = pycolmap.absolute_pose_estimation(mkpq, mp3d, cfg, opt_th)
+    camera = pycolmap.Camera(model=cfg['model'], width=int(cfg['width']), height=int(cfg['height']),
+                             params=cfg['params'])
+    # ret = pycolmap.absolute_pose_estimation(mkpq, mp3d, cfg, opt_th)
+    ret = pycolmap.absolute_pose_estimation(mkpq + 0.5, mp3d, camera,
+                                            estimation_options={"ransac": {"max_error": opt_th}},
+                                            refinement_options={}, )
+    if ret is None:
+        ret = {'success': False, }
+    else:
+        ret['success'] = True
+        ret['qvec'] = ret['cam_from_world'].rotation.quat[[3, 0, 1, 2]]
+        ret['tvec'] = ret['cam_from_world'].translation
+
     # if np.sum(ret['inliers']) <= 20:  # pose estimation failed
     if not ret['success']:
         ret['mkpq'] = mkpq
@@ -401,9 +398,9 @@ def pose_refinement_covisibility(qname, cfg, feature_file, db_frame_id, db_image
         ret['num_inliers'] = 0
         return ret
 
-    init_qvec = ret['qvec']
-    init_tvec = ret['tvec']
-    proj_mkp = reproject(mp3d, rvec=qvec, tvec=tvec, camera=cfg)
+    opt_qvec = ret['qvec']
+    opt_tvec = ret['tvec']
+    proj_mkp = reproject(mp3d, rvec=opt_qvec, tvec=opt_tvec, camera=cfg)
     proj_error = (mkpq - proj_mkp) ** 2
     proj_error = np.sqrt(proj_error[:, 0] + proj_error[:, 1])
     inlier_mask = (np.array(ret['inliers'], int) > 0)
@@ -411,15 +408,10 @@ def pose_refinement_covisibility(qname, cfg, feature_file, db_frame_id, db_image
     md_error = np.median(proj_error[inlier_mask])
     mx_error = np.max(proj_error[inlier_mask])
 
-    # depth = calc_depth(points3D=mp3d, rvec=qvec, tvec=tvec, camera=cfg)
-    # mn_depth = np.min(depth[inlier_mask])
-    # md_depth = np.median(depth[inlier_mask])
-    # mx_depth = np.max(depth[inlier_mask])
-
     if gt_qvec is None or gt_tvec is None:
-        q_diff, t_diff, _ = compute_pose_error(pred_qcw=qvec, pred_tcw=tvec, gt_qcw=init_qvec, gt_tcw=init_tvec)
+        q_diff, t_diff, _ = compute_pose_error(pred_qcw=opt_qvec, pred_tcw=opt_tvec, gt_qcw=qvec, gt_tcw=tvec)
     else:
-        q_diff, t_diff, _ = compute_pose_error(pred_qcw=qvec, pred_tcw=tvec, gt_qcw=gt_qvec, gt_tcw=gt_tvec)
+        q_diff, t_diff, _ = compute_pose_error(pred_qcw=opt_qvec, pred_tcw=opt_tvec, gt_qcw=gt_qvec, gt_tcw=gt_tvec)
     print_text = 'Iter: {:d} inliers: {:d} mn_error: {:.2f}, md_error: {:.2f} mx_error: {:.2f}, q_error:{:.1f} t_error:{:.2f}'.format(
         0,
         ret['num_inliers'],
@@ -436,8 +428,6 @@ def pose_refinement_covisibility(qname, cfg, feature_file, db_frame_id, db_image
 
     inliers_rsac = ret['inliers']
     ret['num_inliers'] = np.sum(ret['inliers'])
-    # init_qvec = ret['qvec']
-    # init_tvec = ret['tvec']
     if opt_type.find("ref") >= 0 and np.sum(inliers_rsac) >= 10:
         for i in range(iters):
             inlier_mask_opt = []
@@ -447,13 +437,19 @@ def pose_refinement_covisibility(qname, cfg, feature_file, db_frame_id, db_image
                 else:
                     keep = False
                 inlier_mask_opt.append(keep)
+            init_pose = pycolmap.Rigid3d(opt_qvec[[1, 2, 3, 0]], opt_tvec)
+            ret = pycolmap.pose_refinement(init_pose, mkpq + 0.5, mp3d, inlier_mask_opt, camera)
+            if ret is None:
+                ret = {'success': False, }
+            else:
+                ret['success'] = True
+                ret['qvec'] = ret['cam_from_world'].rotation.quat[[3, 0, 1, 2]]
+                ret['tvec'] = ret['cam_from_world'].translation
 
-            ret = pycolmap.pose_refinement(tvec, qvec, mkpq, mp3d, inlier_mask_opt, cfg)
+            opt_qvec = ret['qvec']
+            opt_tvec = ret['tvec']
 
-            qvec = ret['qvec']
-            tvec = ret['tvec']
-
-            proj_mkp = reproject(mp3d, rvec=qvec, tvec=tvec, camera=cfg)
+            proj_mkp = reproject(mp3d, rvec=opt_qvec, tvec=opt_tvec, camera=cfg)
             proj_error = (mkpq - proj_mkp) ** 2
             proj_error = np.sqrt(proj_error[:, 0] + proj_error[:, 1])
 
@@ -461,23 +457,15 @@ def pose_refinement_covisibility(qname, cfg, feature_file, db_frame_id, db_image
             # inlier_mask = np.array(inlier_mask_opt).reshape(-1,)
             inlier_mask = (proj_error <= opt_th)  # np.array(inlier_mask_opt).reshape(-1,)
 
-            # print('heiheihei - inliers: ', proj_error[inlier_mask].shape)
-            # print('inlier_mask: ', np.sum(inlier_mask))
-            # if np.sum(inlier_mask) == 0:
-            #     continue
-
             mn_error = np.min(proj_error[inlier_mask])
             md_error = np.median(proj_error[inlier_mask])
             mx_error = np.max(proj_error[inlier_mask])
 
-            # mn_depth = np.min(depth[inlier_mask])
-            # md_depth = np.median(depth[inlier_mask])
-            # mx_depth = np.max(depth[inlier_mask])
-
             if gt_qvec is None or gt_tvec is None:
-                q_diff, t_diff, _ = compute_pose_error(pred_qcw=qvec, pred_tcw=tvec, gt_qcw=init_qvec, gt_tcw=init_tvec)
+                q_diff, t_diff, _ = compute_pose_error(pred_qcw=opt_qvec, pred_tcw=opt_tvec, gt_qcw=qvec, gt_tcw=tvec)
             else:
-                q_diff, t_diff, _ = compute_pose_error(pred_qcw=qvec, pred_tcw=tvec, gt_qcw=gt_qvec, gt_tcw=gt_tvec)
+                q_diff, t_diff, _ = compute_pose_error(pred_qcw=opt_qvec, pred_tcw=opt_tvec, gt_qcw=gt_qvec,
+                                                       gt_tcw=gt_tvec)
             print_text = 'After Iter:{:d} inliers:{:d}/{:d} mn_error:{:.1f}, md_error:{:.1f} mx_error:{:.1f}, q_error:{:.1f}, t_error:{:.2f}'.format(
                 i + 1,
                 np.sum(
@@ -496,7 +484,6 @@ def pose_refinement_covisibility(qname, cfg, feature_file, db_frame_id, db_image
             ret['inliers'] = inlier_mask_opt
             ret['num_inliers'] = np.sum(inlier_mask_opt)
 
-    print(print_text)
     if log_info is not None:
         log_info += (print_text + '\n')
 
@@ -579,7 +566,6 @@ def match_cluster_2D(kpq, desc_q, label_q, db_ids, points3D, feature_file, db_im
             print("No 3D points in this db image: ", db_name)
             continue
 
-        # print("desc_q/desc_db", desc_q.shape, desc_db.shape, db_name)
         if with_label:
             label_db = feature_file[db_name]["labels"].__array__()
 
@@ -644,8 +630,6 @@ def match_cluster_2D(kpq, desc_q, label_q, db_ids, points3D, feature_file, db_im
     all_mp3d = np.array(all_mp3d, float).reshape(-1, 3)
     all_mkpq = np.array(all_mkpq, float).reshape(-1, 2)
 
-    all_mkpq = all_mkpq + 0.5
-
     return outputs, all_mp3d, all_mkpq, all_mp3d_ids, all_q_ids
 
 
@@ -672,8 +656,6 @@ def pose_from_cluster_with_matcher(qname, qinfo, db_ids, db_images, points3D,
     print("qname: ", qname)
     db_name_to_id = {image.name: i for i, image in db_images.items()}
     q_img = cv2.imread(osp.join(image_dir, query_img_prefix, qname))
-    # print('q_img: ', q_img.shape)
-    # exit(0)
     kpq = feature_file[qname]['keypoints'].__array__()
     score_q = feature_file[qname]['scores'].__array__()
     desc_q = feature_file[qname]['descriptors'].__array__()
@@ -728,7 +710,23 @@ def pose_from_cluster_with_matcher(qname, qinfo, db_ids, db_images, points3D,
                 log_info += (print_text + '\n')
             continue
 
-        ret = pycolmap.absolute_pose_estimation(mkpq, mp3d, cfg, thresh)
+        # cam = pycolmap.Camera(model=camera_model, )
+        camera = pycolmap.Camera(model=camera_model, width=int(width), height=int(height), params=params)
+        ret = pycolmap.absolute_pose_estimation(mkpq + 0.5,
+                                                mp3d,
+                                                camera,
+                                                # cfg,
+                                                estimation_options={
+                                                    "ransac": {"max_error": thresh}},
+                                                refinement_options={},
+                                                # thresh
+                                                )
+        if ret is None:
+            ret = {'success': False, }
+        else:
+            ret['success'] = True
+            ret['qvec'] = ret['cam_from_world'].rotation.quat[[3, 0, 1, 2]]
+            ret['tvec'] = ret['cam_from_world'].translation
 
         if not ret["success"]:
             print_text = "qname: {:s} dbname: {:s} ({:d}/{:d}) failed after optimization".format(qname, db_name,
@@ -760,8 +758,6 @@ def pose_from_cluster_with_matcher(qname, qinfo, db_ids, db_images, points3D,
             if n > best_inliers:
                 best_inliers = n
                 best_dbname = db_name
-
-
 
         show_matches = False
 
@@ -1129,7 +1125,7 @@ def pose_from_cluster_with_matcher(qname, qinfo, db_ids, db_images, points3D,
 
         return qvec, tvec, num_inliers, {**best_results, **{'log_info': log_info}}
 
-    if best_results['num_inliers'] >= 10:  # 20 for aachen
+    if best_results['num_inliers'] >= 20:  # 20 for aachen, 10 for others
         qvec = best_results['qvec']
         tvec = best_results['tvec']
         num_inliers = best_results['num_inliers']
@@ -1261,16 +1257,11 @@ def pose_from_cluster_with_matcher(qname, qinfo, db_ids, db_images, points3D,
         ret['cfg'] = cfg
         num_inliers = ret['num_inliers']
 
-        # return qvec, tvec, num_inliers, {**best_results, **{'log_info': log_info}}
         return qvec, tvec, 0, {**best_results, **{'log_info': log_info}}
 
     closest = db_images[db_ids[0][0]]
-    # closest = db_images[db_ids[0][0]]
     print_text = 'Localize {:s} failed, but use the pose of {:s} as approximation'.format(qname, closest.name)
     print(print_text)
     if log_info is not None:
         log_info += (print_text + '\n')
     return closest.qvec, closest.tvec, -1, {**best_results, **{'log_info': log_info}}
-
-# opencv-contrib-python         3.4.2.16
-# opencv-python                 3.4.2.16

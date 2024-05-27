@@ -17,7 +17,8 @@ from pathlib import Path
 
 from it_loc.read_write_model import read_model
 from it_loc.parsers import parse_image_lists_with_intrinsics
-from it_loc.loc_tools import read_retrieval_results, compute_pose_error
+from it_loc.loc_tools import read_retrieval_results
+from it_loc.common import compute_pose_error
 from it_loc.localize_cv2 import pose_from_cluster_with_matcher, do_covisibility_clustering
 from it_loc.matcher import Matcher, confs
 
@@ -395,7 +396,7 @@ if __name__ == '__main__':
     parser.add_argument('--image_dir', type=str,
                         default="/home/mifs/fx221/fx221/localization/aachen_v1_1/images/images_upright", )
     parser.add_argument('--dataset', type=str, required=True)
-    parser.add_argument('--db_imglist_fn', type=str, required=True)
+    # parser.add_argument('--db_imglist_fn', type=str, required=True)
     parser.add_argument('--reference_sfm', type=Path, required=True)
     parser.add_argument('--queries', type=Path, required=True)
     parser.add_argument('--features', type=Path, required=True)

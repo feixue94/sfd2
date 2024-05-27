@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 import torch
 from copy import copy
-from scipy.spatial.transform import Rotation as sciR
+from hloc.utils.read_write_model import qvec2rotmat
 
 
 def sort_dict_by_value(data, reverse=False):
@@ -215,7 +215,8 @@ def reproject_fromR(points3D, rot, tvec, camera):
 
 
 def calc_depth(points3D, rvec, tvec, camera):
-    rot = sciR.from_quat(quat=[rvec[1], rvec[2], rvec[3], rvec[0]]).as_dcm()
+    # rot = sciR.from_quat(quat=[rvec[1], rvec[2], rvec[3], rvec[0]]).as_dcm()
+    rot = qvec2rotmat(qvec=rvec)
     # print('p3d: ', points3D.shape, rot.shape, rot)
     proj_2d = rot @ points3D.transpose() + tvec.reshape(3, 1)
 
@@ -232,7 +233,8 @@ def reproject(points3D, rvec, tvec, camera):
     '''
     # print('camera: ', camera)
     # print('p3d: ', points3D.shape)
-    rot = sciR.from_quat(quat=[rvec[1], rvec[2], rvec[3], rvec[0]]).as_dcm()
+    # rot = sciR.from_quat(quat=[rvec[1], rvec[2], rvec[3], rvec[0]]).as_dcm()
+    rot = qvec2rotmat(qvec=rvec)
     # print('p3d: ', points3D.shape, rot.shape, rot)
     proj_2d = rot @ points3D.transpose() + tvec.reshape(3, 1)
 
@@ -290,28 +292,23 @@ def quaternion_angular_error(q1, q2):
     return theta
 
 
-def ColmapQ2R(qvec):
-    rot = sciR.from_quat(quat=[qvec[1], qvec[2], qvec[3], qvec[0]]).as_dcm()
-    return rot
+# def ColmapQ2R(qvec):
+#     rot = sciR.from_quat(quat=[qvec[1], qvec[2], qvec[3], qvec[0]]).as_dcm()
+#     return rot
 
 
 def compute_pose_error(pred_qcw, pred_tcw, gt_qcw, gt_tcw):
-    pred_Rcw = sciR.from_quat(quat=[pred_qcw[1], pred_qcw[2], pred_qcw[3], pred_qcw[0]]).as_dcm()
+    pred_Rcw = qvec2rotmat(qvec=pred_qcw)
     pred_tcw = np.array(pred_tcw, float).reshape(3, 1)
-    pred_Rwc = pred_Rcw.transpose()
     pred_twc = -pred_Rcw.transpose() @ pred_tcw
 
-    gt_Rcw = sciR.from_quat(quat=[gt_qcw[1], gt_qcw[2], gt_qcw[3], gt_qcw[0]]).as_dcm()
+    gt_Rcw = qvec2rotmat(gt_qcw)
     gt_tcw = np.array(gt_tcw, float).reshape(3, 1)
-    gt_Rwc = gt_Rcw.transpose()
     gt_twc = -gt_Rcw.transpose() @ gt_tcw
 
     t_error_xyz = pred_twc - gt_twc
     t_error = np.sqrt(np.sum(t_error_xyz ** 2))
 
-    pred_qwc = sciR.from_quat(quat=[pred_qcw[1], pred_qcw[2], pred_qcw[3], pred_qcw[0]]).as_quat()
-    gt_qwc = sciR.from_quat(quat=[gt_qcw[1], gt_qcw[2], gt_qcw[3], gt_qcw[0]]).as_quat()
-
-    q_error = quaternion_angular_error(q1=pred_qwc, q2=gt_qwc)
+    q_error = quaternion_angular_error(q1=pred_qcw, q2=gt_qcw)
 
     return q_error, t_error, (t_error_xyz[0, 0], t_error_xyz[1, 0], t_error_xyz[2, 0])
